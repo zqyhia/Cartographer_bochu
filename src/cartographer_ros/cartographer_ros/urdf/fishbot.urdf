@@ -1,0 +1,39 @@
+<robot name="fishbot">
+
+    <link name="base_link" />
+    <link name="imu_link">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="0.02 0.02 0.02" />
+                </geometry>
+                <material name="black">
+                    <color rgba="0 0 0 0.8" />
+                </material>
+            </visual>
+    </link>
+    <link name="laser_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <cylinder length="0.02" radius="0.02" />
+            </geometry>
+            <material name="black">
+                <color rgba="0.0 0.0 0.0 0.8" />
+            </material>
+        </visual>
+    </link>
+
+
+    <joint name="imu_joint" type="fixed">
+        <parent link="base_link" />
+        <child link="imu_link" />
+        <origin xyz="0 0 0" />
+    </joint>
+    <joint name="laser_joint" type="fixed">
+        <parent link="base_link" />
+        <child link="laser_link" />
+        <origin xyz="0 0 0.15" />
+    </joint>
+
+</robot>
