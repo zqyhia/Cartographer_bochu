@@ -194,6 +194,9 @@ Node::Node(
       kReadMetricsServiceName,
       std::bind(
           &Node::handleReadMetrics, this, std::placeholders::_1, std::placeholders::_2));
+  pose_service_ = node_->create_service<cartographer_ros_msgs::srv::StartTrajectoryWithPose>(
+      "start_trajectory_with_pose",
+      std::bind(&Node::HandleStartTrajectoryWithPose, this, std::placeholders::_1, std::placeholders::_2));
 
   // 初始化定时器
   /*
@@ -721,6 +724,66 @@ void Node::StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options) {
   absl::MutexLock lock(&mutex_); // 加锁
   CHECK(ValidateTrajectoryOptions(options)); // 检查配置是否合法
   AddTrajectory(options); // 开始轨迹跟踪
+}
+
+// StartTrajectoryWithPose服务处理器实现
+bool Node::HandleStartTrajectoryWithPose(
+  const std::shared_ptr<cartographer_ros_msgs::srv::StartTrajectoryWithPose::Request> request, // 请求数据
+  std::shared_ptr<cartographer_ros_msgs::srv::StartTrajectoryWithPose::Response> response) { // 响应数据
+
+  // （1）加载轨迹配置
+  TrajectoryOptions trajectory_options;
+  std::tie(std::ignore, trajectory_options) = 
+      LoadOptions(request->configuration_directory, request->configuration_basename);
+
+  // （2）处理初始位姿
+  const auto pose = ToRigid3d(request->initial_pose.pose.pose); // 根据 geometry_msgs/msg/PoseWithCovarianceStamped 接口信息，读取pose
+  // （2.1）验证位姿有效性
+  if (!pose.IsValid()) { 
+    response->status.message =
+        "Invalid pose argument. Orientation quaternion must be normalized.";
+    LOG(ERROR) << response->status.message;
+    response->status.code =
+        cartographer_ros_msgs::msg::StatusCode::INVALID_ARGUMENT;
+    return true;
+  }
+  // (2.2)验证参考轨迹是否存在
+  response->status = TrajectoryStateToStatus(
+    request->relative_to_trajectory_id,
+    {TrajectoryState::ACTIVE, TrajectoryState::FROZEN, TrajectoryState::FINISHED} /* valid states */);
+  if (response->status.code != cartographer_ros_msgs::msg::StatusCode::OK) {
+    LOG(ERROR) << "Can't start a trajectory with initial pose: "
+                << response->status.message;
+    return true;
+  }
+  // (2.3)设置初始位姿到protobuf消息
+  // 以下代码作用：配置一个初始轨迹位姿，用于SLAM系统（特别是纯定位模式）的初始化
+  // 1.创建InitialTrajectoryPose对象​​：创建了一个protobuf消息对象，用于存储初始轨迹位姿信息。
+  ::cartographer::mapping::proto::InitialTrajectoryPose initial_trajectory_pose;
+  // ​2.​设置相对轨迹ID​​：设置这个初始位姿相对于哪个已有轨迹的ID（在纯定位模式中，这通常是已建图轨迹的ID）
+  initial_trajectory_pose.set_to_trajectory_id(request->relative_to_trajectory_id);
+  // 3.​设置相对位姿​​：将ROS格式的位姿(pose)转换为Cartographer内部使用的protobuf格式，并设置为相对位姿。
+  *initial_trajectory_pose.mutable_relative_pose() = cartographer::transform::ToProto(pose);
+  // 4.设置时间戳​​：设置时间戳，这里使用了0时间（rclcpp::Time(0)），表示立即使用这个初始位姿。
+  initial_trajectory_pose.set_timestamp(cartographer::common::ToUniversal(::cartographer_ros::FromRos(request->initial_pose.header.stamp)));
+  // 5.将初始位姿设置到轨迹选项中​​
+  *trajectory_options.trajectory_builder_options.mutable_initial_trajectory_pose() = initial_trajectory_pose; // 使用protobuf格式存入轨迹选项
+
+  // （3）验证轨迹配置，通过验证的话添加轨迹
+  if (!ValidateTrajectoryOptions(trajectory_options)) { // 如果轨迹配置无效
+    response->status.message = "Invalid trajectory options.";
+    LOG(ERROR) << response->status.message;
+    response->status.code = cartographer_ros_msgs::msg::StatusCode::INVALID_ARGUMENT;
+  } else if (!ValidateTopicNames(trajectory_options)) { // 如果话题名无效
+    response->status.message = "Topics are already used by another trajectory.";
+    LOG(ERROR) << response->status.message;
+    response->status.code = cartographer_ros_msgs::msg::StatusCode::INVALID_ARGUMENT;
+  } else { // 有效的情况下，添加轨迹
+    response->status.message = "Success.";
+    response->trajectory_id = AddTrajectory(trajectory_options); // AddTrajectory
+    response->status.code = cartographer_ros_msgs::msg::StatusCode::OK;
+  }
+  return true;
 }
 
 std::vector<

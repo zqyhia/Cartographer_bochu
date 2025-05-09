@@ -42,6 +42,7 @@
 #include "cartographer_ros_msgs/msg/submap_list.hpp"
 #include "cartographer_ros_msgs/srv/submap_query.hpp"
 #include "cartographer_ros_msgs/srv/write_state.hpp"
+#include "cartographer_ros_msgs/srv/start_trajectory_with_pose.hpp" // 新增服务StartTrajectoryWithPose头文件
 #include "nav_msgs/msg/odometry.hpp"
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
@@ -151,6 +152,10 @@ class Node {
       cartographer_ros_msgs::srv::GetTrajectoryStates::Response::SharedPtr response);
   bool handleReadMetrics(const cartographer_ros_msgs::srv::ReadMetrics::Request::SharedPtr,
       cartographer_ros_msgs::srv::ReadMetrics::Response::SharedPtr response);
+  // 新增StartTrajectoryWithPose服务处理函数 
+  bool HandleStartTrajectoryWithPose(
+      const std::shared_ptr<cartographer_ros_msgs::srv::StartTrajectoryWithPose::Request> request,
+      std::shared_ptr<cartographer_ros_msgs::srv::StartTrajectoryWithPose::Response> response);
 
   // Returns the set of SensorIds expected for a trajectory.
   // 'SensorId::id' is the expected ROS topic name.
@@ -200,6 +205,8 @@ class Node {
   ::rclcpp::Service<cartographer_ros_msgs::srv::WriteState>::SharedPtr write_state_server_;
   ::rclcpp::Service<cartographer_ros_msgs::srv::GetTrajectoryStates>::SharedPtr get_trajectory_states_server_;
   ::rclcpp::Service<cartographer_ros_msgs::srv::ReadMetrics>::SharedPtr read_metrics_server_;
+  // 新增服务StartTrajectoryWithPose的共享指针
+  ::rclcpp::Service<cartographer_ros_msgs::srv::StartTrajectoryWithPose>::SharedPtr pose_service_; 
 
 
   struct TrajectorySensorSamplers {

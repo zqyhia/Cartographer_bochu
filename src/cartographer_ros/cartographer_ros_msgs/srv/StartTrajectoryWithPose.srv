@@ -1,0 +1,11 @@
+# Request
+geometry_msgs/PoseWithCovarianceStamped initial_pose
+string configuration_directory  # 配置文件路径
+string configuration_basename    # 配置文件名
+int32 relative_to_trajectory_id  # 参考轨迹ID（通常为建图轨迹）
+
+---
+
+# Response
+cartographer_ros_msgs/StatusResponse status
+int32 trajectory_id

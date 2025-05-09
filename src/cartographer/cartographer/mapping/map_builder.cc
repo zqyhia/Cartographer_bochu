@@ -351,7 +351,8 @@ std::map<int, int> MapBuilder::LoadState(
         const NodeId node_id(proto.node().node_id().trajectory_id(),
                              proto.node().node_id().node_index());
         // 获取预存位姿
-        const transform::Rigid3d& node_pose = node_poses.at(node_id);
+        const transform::Rigid3d& node_pose = transform::Rigid3d::Identity(); // 全部修改为原点，便于定位
+        // const transform::Rigid3d& node_pose = node_poses.at(node_id);
         // 将节点添加到姿势图
         pose_graph_->AddNodeFromProto(node_pose, proto.node());
         break;
