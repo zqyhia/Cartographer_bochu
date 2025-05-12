@@ -39,7 +39,10 @@ TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = true -- 在 ​前�
 TRAJECTORY_BUILDER_2D.motion_filter.max_angle_radians = math.rad(0.1)
 
 POSE_GRAPH.constraint_builder.min_score = 0.65 -- 控制一般回环检测的阈值（普通子图匹配） 0.65
-POSE_GRAPH.constraint_builder.global_localization_min_score = 0.7 -- 控制全局重定位（global localization）时的匹配阈值 0.7
+POSE_GRAPH.constraint_builder.global_localization_min_score = 0.85 -- 控制全局重定位（global localization）时的匹配阈值 0.7
+
+POSE_GRAPH.constraint_builder.sampling_ratio = 0.05 -- 约束构建器的采样比例，每隔多少节点会尝试与子地图或其他节点建立约束 0.3
+POSE_GRAPH.global_sampling_ratio = 0.01 -- 全局采样的比例，每隔多少节点会尝试与历史所有子地图进行回环匹配 0.003
 
 POSE_GRAPH.optimize_every_n_nodes = 30 -- 90
 -- TRAJECTORY_BUILDER_2D.submaps.num_range_data = 90 -- 90

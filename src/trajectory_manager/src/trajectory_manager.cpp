@@ -15,6 +15,13 @@ class TrajectoryManager : public rclcpp::Node {
 public:
   // TrajectoryManager：构造函数
   TrajectoryManager() : Node("trajectory_manager") {
+    // 声明参数并设置默认值
+    this->declare_parameter<std::string>("configuration_directory", 
+      "/home/zqyhia/cartographer_ws/src/cartographer_ros/cartographer_ros/configuration_files");
+    this->declare_parameter<std::string>("configuration_basename", "fishbot_2d_location.lua");
+    config_dir_ = this->get_parameter("configuration_directory").as_string();
+    config_basename_ = this->get_parameter("configuration_basename").as_string();
+
     // 初始化服务客户端
     start_client_ = this->create_client<StartTrajectoryWithPose>(
       "/start_trajectory_with_pose");
@@ -87,8 +94,8 @@ private:
             // 步骤3：准备新轨迹请求
             auto request = std::make_shared<StartTrajectoryWithPose::Request>();
             request->initial_pose = *pose;
-            request->configuration_directory = "/home/zqyhia/cartographer_ws/src/cartographer_ros/cartographer_ros/configuration_files"; // 这里暂时先用绝对路径
-            request->configuration_basename = "fishbot_2d_location.lua"; // 这里暂时先直接给出lua文件名
+            request->configuration_directory = config_dir_; // 这里暂时先用绝对路径
+            request->configuration_basename = config_basename_; // 这里暂时先直接给出lua文件名
             request->relative_to_trajectory_id = 0; // 参考轨迹ID，应该为0，对应pbstreaem文件的轨迹ID
 
             // 步骤4：启动新轨迹
@@ -107,6 +114,8 @@ private:
     });
   }
 
+  std::string config_dir_;
+  std::string config_basename_;
   rclcpp::Client<StartTrajectoryWithPose>::SharedPtr start_client_;
   rclcpp::Client<FinishTrajectory>::SharedPtr finish_client_;
   rclcpp::Client<GetTrajectoryStates>::SharedPtr states_client_;
