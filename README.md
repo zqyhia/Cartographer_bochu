@@ -12,6 +12,8 @@
 
 wget http://fishros.com/install -O fishros && . fishros
 
+rosdepc update
+
 rosdepc install -r --from-paths src --ignore-src --rosdistro $ROS_DISTRO -y
 
 3.构建cartographer和cartographer_ros，使用--packages-up-to在构建依赖后再构建cartographer_ros：
