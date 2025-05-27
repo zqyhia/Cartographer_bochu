@@ -38,13 +38,13 @@ TRAJECTORY_BUILDER_2D.missing_data_ray_length = 3.
 TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = true -- 在 ​前端（Local SLAM）​ 使用 ​在线相关性扫描匹配.显著提高 ​短时间内的位姿精度，尤其适合 ​高速运动 或 ​低精度里程计 的场景。
 TRAJECTORY_BUILDER_2D.motion_filter.max_angle_radians = math.rad(0.1)
 
-POSE_GRAPH.constraint_builder.min_score = 0.65 -- 控制一般回环检测的阈值（普通子图匹配） 0.65
-POSE_GRAPH.constraint_builder.global_localization_min_score = 0.85 -- 控制全局重定位（global localization）时的匹配阈值 0.7
+POSE_GRAPH.constraint_builder.min_score = 0.75 -- 控制一般回环检测的阈值（普通子图匹配） 0.65
+POSE_GRAPH.constraint_builder.global_localization_min_score = 0.8 -- 控制全局重定位（global localization）时的匹配阈值 0.7
 
 POSE_GRAPH.constraint_builder.sampling_ratio = 0.05 -- 约束构建器的采样比例，每隔多少节点会尝试与子地图或其他节点建立约束 0.3
-POSE_GRAPH.global_sampling_ratio = 0.01 -- 全局采样的比例，每隔多少节点会尝试与历史所有子地图进行回环匹配 0.003
+POSE_GRAPH.global_sampling_ratio = 0.005 -- 全局采样的比例，每隔多少节点会尝试与历史所有子地图进行回环匹配 0.003
 
-POSE_GRAPH.optimize_every_n_nodes = 30 -- 90
+POSE_GRAPH.optimize_every_n_nodes = 50 -- 90
 -- TRAJECTORY_BUILDER_2D.submaps.num_range_data = 90 -- 90
 -- POSE_GRAPH.constraint_builder.fast_correlative_scan_matcher.branch_and_bound_depth = 8 -- 回环检测搜索深度 7
 POSE_GRAPH.optimization_problem.ceres_solver_options.max_num_iterations = 100 -- 控制 ​全局优化（后端）​ 时 ​Ceres Solver 的最大迭代次数 50
@@ -52,6 +52,14 @@ POSE_GRAPH.optimization_problem.rotation_weight = 3e4 -- 控制 ​旋转约束 
 -- POSE_GRAPH.optimization_problem.acceleration_weight = 1e1 -- 控制 ​IMU线性加速度 在优化中的权重。​值越大：优化结果更信任IMU的加速度测量（可能降低激光匹配的权重）。1.1e2
 POSE_GRAPH.optimization_problem.local_slam_pose_rotation_weight = 1e5
 POSE_GRAPH.optimization_problem.odometry_rotation_weight= 1e2
+
+POSE_GRAPH.constraint_builder.max_constraint_distance = 10. -- 计算约束的最大距离 15.
+POSE_GRAPH.global_constraint_search_after_n_seconds = 15. -- 计算回环的间隔时间 10.
+POSE_GRAPH.constraint_builder.fast_correlative_scan_matcher.linear_search_window = 1. -- 快速相关性扫描匹配器的匹配平移范围（越大回环匹配的范围也越大） 7.
+POSE_GRAPH.constraint_builder.fast_correlative_scan_matcher.angular_search_window = math.rad(30.) -- 快速相关性扫描匹配器的匹配旋转范围（越大回环匹配的范围也越大） math.rad(30.)
+POSE_GRAPH.constraint_builder.fast_correlative_scan_matcher.branch_and_bound_depth = 7. -- 扫描匹配时使用的分支限界搜索深度 7.
+TRAJECTORY_BUILDER_2D.real_time_correlative_scan_matcher.linear_search_window = 0.1 -- 实时扫描匹配​​的平移搜索范围 0.1
+TRAJECTORY_BUILDER_2D.real_time_correlative_scan_matcher.angular_search_window = math.rad(20.) -- 实时扫描匹配​​的旋转搜索范围 math.rad(20.)
 
 -- 新的纯定位模式配置（见map_builder.cc: MaybeAddPureLocalizationTrimmer），仅定位不建图
 TRAJECTORY_BUILDER.pure_localization_trimmer = {
